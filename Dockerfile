@@ -1,4 +1,5 @@
-FROM python:3.7-alpine3.10
+#FROM python:3.7-alpine3.10
+FROM python:3.7-buster
 
 MAINTAINER Paul Podgorsek <ppodgorsek@users.noreply.github.com>
 LABEL description Robot Framework in Docker.
@@ -66,11 +67,11 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositori
     xauth \
     "xvfb-run~$XVFB_VERSION" \
   && mv /usr/lib/chromium/chrome /usr/lib/chromium/chrome-original \
-  && ln -sfv /opt/robotframework/bin/chromium-browser /usr/lib/chromium/chrome \
+  && ln -sfv /opt/robotframework/bin/chromium-browser /usr/lib/chromium/chrome
 # FIXME: above is a workaround, as the path is ignored
 
 # Install Robot Framework and Selenium Library
-  && pip3 install \
+RUN pip3 install \
     --no-cache-dir \
     robotframework==$ROBOT_FRAMEWORK_VERSION \
     robotframework-databaselibrary==$DATABASE_LIBRARY_VERSION \
@@ -81,26 +82,25 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositori
     robotframework-requests==$REQUESTS_VERSION \
     robotframework-seleniumlibrary==$SELENIUM_LIBRARY_VERSION \
     robotframework-sshlibrary==$SSH_LIBRARY_VERSION \
-    PyYAML \
+    PyYAML
 
 # Download the glibc package for Alpine Linux from its GitHub repository
-  && wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
+RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
     && wget -q "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$ALPINE_GLIBC/glibc-$ALPINE_GLIBC.apk" \
     && wget -q "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$ALPINE_GLIBC/glibc-bin-$ALPINE_GLIBC.apk" \
     && apk add glibc-$ALPINE_GLIBC.apk \
     && apk add glibc-bin-$ALPINE_GLIBC.apk \
     && rm glibc-$ALPINE_GLIBC.apk \
     && rm glibc-bin-$ALPINE_GLIBC.apk \
-    && rm /etc/apk/keys/sgerrand.rsa.pub \
+    && rm /etc/apk/keys/sgerrand.rsa.pub
 
 # Download Gecko drivers directly from the GitHub repository
-  && wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKO_DRIVER_VERSION/geckodriver-$GECKO_DRIVER_VERSION-linux64.tar.gz" \
+RUN wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKO_DRIVER_VERSION/geckodriver-$GECKO_DRIVER_VERSION-linux64.tar.gz" \
     && tar xzf geckodriver-$GECKO_DRIVER_VERSION-linux64.tar.gz \
     && mkdir -p /opt/robotframework/drivers/ \
     && mv geckodriver /opt/robotframework/drivers/geckodriver \
     && rm geckodriver-$GECKO_DRIVER_VERSION-linux64.tar.gz \
-
-  && apk del --no-cache --update-cache .build-deps
+    && apk del --no-cache --update-cache .build-deps
 
 # Update system path
 ENV PATH=/opt/robotframework/bin:/opt/robotframework/drivers:$PATH
